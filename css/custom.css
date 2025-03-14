@@ -1,0 +1,19 @@
+.content-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.image-container img {
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.about-me {
+    color: var(--bright-white);
+    background-color: var(--dark-black);
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 400px;
+}
