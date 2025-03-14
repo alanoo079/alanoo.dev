@@ -57,9 +57,9 @@
 <p>There I found an unencrypted sqlite3 .db file “msgstore.db”. Within the table “message” I found 3 messages.</p>
 <p><img src="/writeups/ssm-2025/whatsup/assets/pic1.png" alt="msgstore.db (message)"></p>
 <p>Now that I have found the backup key, I can decrypt the .crypt15 files and thus find more clues or maybe the flag. The first step was of course to google🙏, where after a little searching I found this nice tool:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#fffb99;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#8be88c">https://github.com/ElDavoo/wa-crypt-tools</span></pre></code></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#8be88c">https://github.com/ElDavoo/wa-crypt-tools</span></pre></code></div>
 <p>Since I found the backup key in msgstore.db and that there is a db file named "msgstore.db.crypt15" I wanted to decrypt this first.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#fffb99;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#66d9ef">python </span><span style="color:#ae81ff">-m </span><span style="color:#66d9ef">pip install </span><span style="color:#ae81ff">wa-crypt-tools</span></pre></code></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#66d9ef">python </span><span style="color:#ae81ff">-m </span><span style="color:#66d9ef">pip install </span><span style="color:#ae81ff">wa-crypt-tools</span></pre></code></div>
 <p>After decryption, all you had to do was open the new "msgstore.db" and enter the table messages, which shows these chat logs:</p>
 <p><img src="/writeups/ssm-2025/whatsup/assets/pic2.png" alt="msgstore.db"></p>
 
