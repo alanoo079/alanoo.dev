@@ -58,10 +58,9 @@ h6:before {
 h1:first-child {
     margin-top: 0;
 }
-h2:first-child {
+h3:first-child {
     margin-top: 0;
 }
-
 
 /* Paragraphs */
 p {

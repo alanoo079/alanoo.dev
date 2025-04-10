@@ -1,0 +1,11 @@
+@import 'typography.css';
+@import 'layout.css';
+@import '/css/header.css';
+@import '/css/logo.css';
+@import '/css/about.css';
+@import '/css/footer.css';
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--fg);
+}
