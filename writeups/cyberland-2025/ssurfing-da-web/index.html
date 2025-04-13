@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SSuRFing da web  &ndash; alanoo.dev</title>
+    <meta name="description" content="My dev page :)">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+    
+    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/achievements/" title="Posts">Achievements</a></li>
+                    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                
+                    <li class="main-nav__item"><a class="nav-main-item" href="/posts/" title="Projects">wip</a></li>
+                    
+                    </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <header class="content__header">
+                <h1>SSuRFing da web <code><span style="color:#2ed8e8">web</code> <code><span style="color:#56da45">easy</code></pre></h1>
+            </header>
+            <div class="content__body">
+                <h2 id="kategori">Category</h2>
+                <p>Web</p>
+                <h2 id="beskrivning">Chall Author</h2>
+                <p>wuurrd</p>
+                <h2 id="beskrivning">Stats</h2>
+                <p>Total Solves: <strong>86 Players</strong></p>
+                <p>Final Points: <strong>100p</strong></p>
+                <h2 id="beskrivning">Description</h2>
+                <p>The flag is luckily only available from inside the server, so it's totally safe.</p>
+                <h2 id="lösning">Solution</h2>
+                <p>I was provided the files: main.py, flag.txt and a Dockerfile. Let's look at the source:</p>
+
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-python">
+import threading
+from fastapi.responses import RedirectResponse
+import uvicorn
+import socket
+import ipaddress
+
+import aiohttp
+from fastapi import FastAPI, HTTPException
+from urllib.parse import urlparse
+
+app = FastAPI()
+local_app = FastAPI()
+
+
+class SSRFError(Exception):
+    pass
+
+
+@local_app.get("/flag")
+def get_flag() -> str:
+    return open("flag.txt").read()
+
+
+async def assert_url_safe(url: str):
+    hostname = urlparse(url).hostname
+    if not hostname:
+        return
+    ip = socket.gethostbyname(hostname)
+    try:
+        i = ipaddress.ip_address(ip)
+        if i.is_private:
+            raise SSRFError(f"Host {hostname} is not safe")
+    except ValueError:
+        raise SSRFError(f"Unknown Host {hostname}")
+
+
+@app.get("/")
+def index():
+    return RedirectResponse("/docs")
+
+
+@app.post("/scrape", response_model=str)
+async def scrape(url: str) -> str:
+    try:
+        await assert_url_safe(url)
+        timeout = aiohttp.ClientTimeout(
+            total=5, connect=5, sock_read=5, sock_connect=5, ceil_threshold=5
+        )
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=timeout) as response:
+                try:
+                    data = await response.text()
+                except:
+                    data = ""
+                if not response.ok:
+                    raise HTTPException(
+                        status_code=response.status,
+                        detail=f"STATUS={response.status} {data}",
+                    )
+                return data
+    except SSRFError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def main():
+    threading.Thread(
+        target=uvicorn.run,
+        kwargs={
+            "app": local_app,
+            "port": 1337,
+        },
+    ).start()
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=4000,
+    )
+
+
+if __name__ == "__main__":
+    main()
+                    </code></pre>
+                </div>
+                
+                <p>Its a simple backend server with two main functions. <strong>assert_url_safe</strong> & <strong>scrape</strong>. The assert_url_safe function basically just checks the url we provide to the /scrape route. It does this using <strong>i.is_private</strong> which is defined in the python3.12/ipadress native library.</p>
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-python">
+    def is_private(self):
+        """``True`` if the address is defined as not globally reachable by
+        iana-ipv4-special-registry_ (for IPv4) or iana-ipv6-special-registry_
+        (for IPv6) with the following exceptions:
+
+        * ``is_private`` is ``False`` for ``100.64.0.0/10``
+        * For IPv4-mapped IPv6-addresses the ``is_private`` value is determined by the
+            semantics of the underlying IPv4 addresses and the following condition holds
+            (see :attr:`IPv6Address.ipv4_mapped`)::
+
+                address.is_private == address.ipv4_mapped.is_private
+
+        ``is_private`` has value opposite to :attr:`is_global`, except for the ``100.64.0.0/10``
+        IPv4 range where they are both ``False``.
+        """
+        return (
+            any(self in net for net in self._constants._private_networks)
+            and all(self not in net for net in self._constants._private_networks_exceptions)
+        )
+                    </code></pre>
+                </div>
+                <p>Now that we understand the source we can think of an exploitation plan!</p>
+
+                <p>We do know that flag.txt is in the server's <code class="language-javascript">localhost:3000/flag.txt</code>. So our goal is to trick the server into scraping the flag from itself locally. Problem is that because of the <code class="language-javascript">is.private</code> check, we cannot make it go to a local IP.</p>
+
+                <p>My first idea was to rewrite the URL in such a way that it bypasses the checks, like for example rewriting it into IPv6, but reading the native library's source, this is out of the box.</p>
+
+                <p>But what we can do is make it go to, for example, <code class="language-python">https://google.com/</code>. We control the page's functions and thus we control what the <code class="language-javascript">aiohttp</code> client does.</p>
+
+                <p>This means that we can do a simple redirect. Basically, for example, making the server go to <code class="language-javascript">https://alanoo.dev/code.php</code>. The <code class="language-javascript">aiohttp</code> client will thus execute the PHP code, which we will write to redirect it to: <div><code><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><span style="color:#c95858">localhost:3000/flag.txt</span></pre></code></div></p>
+                
+                <p>Now I only needed to write some simple php code and get the flag!</p>
+
+<h2>Final Payload</h2>
+<div class="highlight">
+    <pre style="font-size: 14px;"><code class="language-python">
+&lt;?php
+header("Location: http://localhost:3000/flag.txt");
+die();
+
+# https://skibidi.wtf/code.php
+    </code></pre>
+</div>
+                <h2>Flag</h2>
+                <code><span style="color:#c3b8de">flag{wait_redirects_are_a_thing_too???}</span></code>
+            </div>
+            <footer class="content__footer"></footer>
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">alanoo.dev</h1>
+                    <p class="about__description">My dev page :).</p>
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                </ul>
+            </div>
+            <hr>
+            <div class="aside__content">
+                <p>
+                    By alanoo, 
+                    2025-04-14
+                </p>
+            </div>
+        </section>
+
+        <footer class="page__footer">
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+</body>
+
+</html>
