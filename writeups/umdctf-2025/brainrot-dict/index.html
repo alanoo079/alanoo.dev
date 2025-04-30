@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Brainrot-Dictionary  &ndash; alanoo.dev</title>
+    <meta name="description" content="My dev page :)">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+    
+    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/achievements/" title="Posts">Achievements</a></li>
+                    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                
+                    <li class="main-nav__item"><a class="nav-main-item" href="/posts/" title="Projects">wip</a></li>
+                    
+                    </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <header class="content__header">
+                <h1>Brainrot-Dictionary <code><span style="color:#2ed8e8">web</code></pre></h1>
+            </header>
+            <div class="content__body">
+                <h2 id="kategori">Category</h2>
+                <p>Web</p>
+                <h2 id="author">Chall Author</h2>
+                <p>aparker</p>
+                <h2 id="stats">Stats</h2>
+                <p>Total Solves: <strong>199/708 Teams</strong></p>
+                <p>Final Points: <strong>295p</strong></p>
+                <h2 id="description">Description</h2>
+                <p>This website will help you understand the rest of the nonsense going on in the CTF. You can even upload your own brainrot words and get definitions!</p>
+                <h2 id="prewords">Preface</h2>
+                <p>The easiest web chall of the CTF and this is one of the ones that took me the longest to figure out.<p>
+                <h2 id="website">Looking at the website</h2>
+                <p>The website is composed up by 2 parts: the upload functionality and the dictionary lister:</p>
+                <p><img src="/writeups/umdctf-2025/brainrot-dict/assets/1.png"></p>
+                <p><img src="/writeups/umdctf-2025/brainrot-dict/assets/2.png"></p>
+                <p>This reminds me a lot of past file upload vulnerabilities which I used to get RCE...</p>
+                <h2 id="sourcecode">Source Code Review</h2>
+                <p>Looking at the source code I looked for the logic that handles what we can input. That being the <strong>filename</strong> and <strong>contents</strong> of the file:</p>
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-python">
+from flask import Flask, render_template, request, redirect, session, url_for, send_from_directory
+import os
+import re
+import random
+import string
+from werkzeug.utils import secure_filename
+from urllib.parse import unquote
+
+app = Flask(__name__)
+app.secret_key = os.urandom(32)
+app.config['MAX_CONTENT_LENGTH'] = 1000
+
+# Directory to save uploaded files and images
+UPLOAD_FOLDER = 'uploads'
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def create_uploads_dir(d=None):
+    dirname = os.path.join(UPLOAD_FOLDER, ''.join(random.choices(string.ascii_letters, k=30)))
+    if d is not None:
+        dirname = d
+    session['upload_dir'] = dirname
+    os.mkdir(dirname)
+    os.popen(f'cp flag.txt {dirname}')
+    os.popen(f'cp basedict.brainrot {dirname}')
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        if 'user_file' not in request.files:
+            return render_template('index.html', error="L + RATIO + YOU FELL OFF")
+        user_file = request.files['user_file']
+        if not user_file.filename.endswith('.brainrot'):
+            return render_template('index.html', error="sorry bruv that aint brainrotted enough")
+        if 'upload_dir' not in session:
+            create_uploads_dir()
+        elif not os.path.isdir(session['upload_dir']):
+            create_uploads_dir(session['upload_dir'])
+        fname = unquote(user_file.filename)
+        if '/' in fname:
+            return render_template("index.html", error="dont do that")
+        user_file.save(os.path.join(session['upload_dir'], fname))
+        return redirect(url_for('dict'))
+    return render_template('index.html')
+
+@app.route('/dict')
+def dict():
+    if 'upload_dir' not in session:
+        create_uploads_dir()
+    elif not os.path.isdir(session['upload_dir']):
+        create_uploads_dir(session['upload_dir'])
+
+    cmd = f"find {session['upload_dir']} -name \\*.brainrot | xargs sort | uniq"
+    results = os.popen(cmd).read()
+    return render_template('dict.html', results=results.splitlines())
+
+
+
+if __name__ == '__main__':
+    app.run(debug=False, host="0.0.0.0")
+                    </code></pre>
+                </div>
+                <p></p>
+                <p>The interesting part here is how the server's backend handles the upload_dir and cmd:</p>
+                                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-python">
+    cmd = f"find {session['upload_dir']} -name \\*.brainrot | xargs sort | uniq"
+    results = os.popen(cmd).read()
+    return render_template('dict.html', results=results.splitlines())
+                </code></pre>
+</div>          <p></p>
+                <p>So xargs basically just fins the .brainrot (our file) and makes an upload dir. My first thought was to try to input cmds like "cat flag.txt" into the end of the filename like:</p>
+                <code><pre><span style="color:#765fb1">
+aaa.brainrot;cat flag.txt
+                </span></code></pre>
+                <p>But our extension has to end with .brainrot so that doesn't work.</p>   
+                <h2 id="vulnerabilities">The Vulnerability</h2>
+                <p>But researching and playing around with xargs locally using the provided source code I found out that <strong>xargs splits by spaces!</strong></p>
+                <p>So we could make file named flag.txt then just space and add basedict.brainrot to get the flag.</p>
+                <h2 id="finalpayload">Final Payload</h2>
+                <div class="highlight">
+                    <pre style="font-size: 18px;"><code class="language-javascript">
+flag.txt basedict.brainrot
+                </code></pre>
+                <h2 id="flag">Flag</h2>
+                
+                <p><img src="/writeups/umdctf-2025/brainrot-dict/assets/3.png"></p>
+                <code><span style="color:#c3b8de">UMDCTF{POSIX_no_longer_recommends_that_this_is_possible}</span></code>
+            </div>
+            <footer class="content__footer"></footer>
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">alanoo.dev</h1>
+                    <p class="about__description">My dev page :).</p>
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                </ul>
+                
+            </div>
+            <hr>
+            <div class="aside__content">
+                <p>
+                    By alanoo 
+                    2025-04-30
+                </p>
+                <hr>
+                <span style="color:#ca7c9f">Table of Contents:</span>
+                <nav id="TableOfContents">
+
+                    <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">1.</span> <a href="#description">Description</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.</span> <a href="#prewords">Preface</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">3.</span> <a href="#website">Looking at the Website</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">4.</span> <a href="#sourcecode">Source Code Review</a>
+                      </div>
+                    <div><span style="color:#4d5859">5.</span> <a href="#vulnerabilities">The Vulnerability</a></div>
+                    <div><span style="color:#4d5859">6.</span> <a href="#finalpayload">Final Payload</a></div>
+                    <div><span style="color:#4d5859">7.</span> <a href="#flag">Flag</a></div>
+
+        </nav>
+
+        
+                        </div>
+                        <p></p>
+                        <div class="logo-container" style="display: flex; justify-content: center; align-items: center;">
+                            <img src="/writeups/umdctf-2025/assets/umdctf.png">
+                          </div>
+                    </section>
+        
+                    <footer class="page__footer"><p>
+        
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+</body>
+
+</html>
