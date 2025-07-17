@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Hanzi Helper | 汉字助手 - alanoo.dev</title>
+    <meta name="description" content="Chrome extension for learning Chinese characters on any webpage.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8"/>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.1/css/academicons.min.css" integrity="sha512-b1ASx0WHgVFL5ZQhTgiPWX+68KjS38Jk87jg7pe+qC7q9YkEtFq0z7xCglv7qGIs/68d3mAp+StfC8WKC5SSAg==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/css/colour/gruvbox-dark.css">
+    <link rel="stylesheet" href="/css/colour/dark-mode.css">
+    <link rel="stylesheet" href="/css/risotto.css">
+    <link rel="stylesheet" href="/css/custom.css">
+    <link rel="stylesheet" href="/projects/projects.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="page__header">
+            <h1 class="page__logo"><a href="/" class="page__logo-inner">alanoo.dev</a></h1>
+            <nav class="page__nav main-nav">
+                <ul>
+                    <li class="main-nav__item"><a class="nav-main-item" href="/achievements/" title="Projects">Achievements</a></li>
+                    <li class="main-nav__item"><a class="nav-main-item" href="/writeups/" title="Writeups">Writeups</a></li>
+                    <li class="main-nav__item"><a class="nav-main-item" href="/projects/" title="Projects">Projects</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <section class="page__body">
+            <h2>Hanzi Helper | 汉字助手</h2>
+            <p>A little Chrome extension that collects, converts, and helps you learn Chinese characters on any webpage for a easier Hanzi learning experience!</p>
+
+            <h3 id="overview">Project Overview</h3>
+            <p>Hanzi Helper is a small browser extension that is like a small toolbox. Its full of small tools that help you with your hanzi learning journey!</p>
+            <p>Its made primarily for Chrome and written in javascript as a way for me to improve my js abilities.</p>
+
+            <h3 id="features">Features</h3>
+            <p>Here's the current feature set as of version <code>1.3</code>. Feel free to checkout the github repo for the latest information :D</p>
+            <h4 id="1">1. Hanzi Grabber</h4>
+            <p>This feature lets you grab all hanzi in your current tab. For me this is very useful as i usually make small scripts to check my comprehension or make flashcards so just being able to click a button to do this is so much simpler.</p>
+            <p>It also automatically removes any duplicates and formats it with a space as a divider. For example: <code>汉 字 助 手</code></p>
+
+            <h4 id="2">2. Converter</h4>
+            <p>The converter goes hand in hand with all other features. This option lets you choose if you want your output in Simplified or Traditional Hanzi.</p>
+            <p>For example selecting simplified and then using the Hanzi Grabber we can grab all hanzi and then convert the traditional ones we found into their simplified forms.</p>
+            <img src="../assets/grabber.png">
+
+            <h4 id="3">3. Hanzi Switcher</h4>
+            <p>Similair to the Hanzi Grabber this feature goes hand in hand with the Converter. Using the Hanzi Switcher we can switch all hanzi on a website to our preferred choice, be it Simplified or Traditional.</p>
+            <p>For example selecting simplified and then using the Hanzi Switcher we can switch all the hanzi on a page to their simplified form.</p>
+            <img src="../assets/hanzi2.png">
+
+            <h3 id="code">Code</h3>
+            <p>The extension's actual code is less than 300 lines long and is super simple.</p>
+            <p>If you would like to modify this extension, you will need to install it manually. Clone, download or fork the repository. In Chrome Extensions page <code>chrome://extensions/</code>. Developer mode must be enabled, then click the button Load unpacked extension.</p>
+            <p>Feel free to send a pull request if you've made an improvement.</p>
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </section>
+
+        <section class="page__aside">
+            <div class="aside__about">
+                <div class="aside__about">
+                    <h1 class="about__title">Hanzi Helper</h1>
+                    <p class="about__description">Chrome extension for Chinese character learning.</p>
+                    <img src="../assets/hanzi.png" alt="Hanzi Helper Logo" style="width: 64px; height: 64px; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                </div>
+                <ul class="aside__social-links">
+                    <li>
+                        <a href="https://admin.tryhackme.com" rel="me" aria-label="secret" title="secret"><i class="fas fa-flag" aria-hidden="true"></i></a>&nbsp;
+                    </li>
+                                    <p>
+                    By alanoo, 
+                    2025-07-18
+                </p>
+                </ul>
+            </div>
+            <hr>
+            <div class="aside__content">
+                <h3>Project Links</h3>
+                <div class="project-links-sidebar">
+                    <a href="https://github.com/alanoo079/hanzi-helper" class="project-btn" target="_blank">
+                        <i class="fab fa-github"></i>
+                        View on GitHub
+                    </a>
+                </div>
+            
+                <hr>
+                <span style="color:#ca7c9f">Table of Contents:</span>
+                <nav id="TableOfContents">
+
+                    <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">1.</span> <a href="#overview">Overview</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.</span> <a href="#features">Features</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.1.</span> <a href="#1">Hanzi Grabber</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.2.</span> <a href="#2">Converter</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">2.3.</span> <a href="#3">Hanzi Switcher</a>
+                      </div>
+                      <div style="white-space: nowrap;">
+                        <span style="color:#4d5859">3.</span> <a href="#code">Code</a>
+                      </div>
+
+        </nav>
+
+        
+                        </div>
+        </section>
+
+        <footer class="page__footer">
+            <p class="copyright"></p>
+            <p class="advertisement">Powered by <a href="https://gohugo.io/">hugo</a> and <a href="https://github.com/joeroe/risotto">risotto</a>.</p>
+        </footer>
+        </div>
+    </body>
+</html>
